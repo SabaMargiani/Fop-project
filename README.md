@@ -33,7 +33,11 @@ After running the program, you will be prompted to enter BASIC code. Type your B
   Supported Commands
   
 LET: Assign a value to a variable.
+
 PRINT: Output the value of a variable or expression.
+
 WHILE: Start a loop that continues until a condition is no longer true.
-ENDWHILE: End the loop (if supported by your implementation).
+
+ENDWHILE: End the loop.
+
 IF and GOTO: Provide an alternative to WHILE using basic control flow.
