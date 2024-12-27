@@ -41,3 +41,5 @@ WHILE: Start a loop that continues until a condition is no longer true.
 ENDWHILE: End the loop.
 
 IF and GOTO: Provide an alternative to WHILE using basic control flow.
+
+END:Terminates the program. The END command stops the program execution. After this command is encountered, the interpreter exits.
