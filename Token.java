@@ -1,15 +1,21 @@
-class Token {
-    enum Type {
-        PRINT, LET, IDENTIFIER, NUMBER, EQUALS, PLUS, MINUS,
-        LESS_THAN, LESS_THAN_OR_EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL,
-        WHILE, ENDWHILE, END, EOF
+public class Token {
+    TokenType type;
+    String string;
+    int line;
+
+    public Token(TokenType type, int line) {
+        this.type = type;
+        this.line = line;
     }
 
-    Type type;
-    String value;
-
-    Token(Type type, String value) {
+    public Token(TokenType type, String string, int line) {
         this.type = type;
-        this.value = value;
+        this.line = line;
+        this.string = string;
+    }
+
+    @Override
+    public String toString() {
+        return type.toString();
     }
 }
