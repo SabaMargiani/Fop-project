@@ -45,4 +45,4 @@ IF and GOTO: Provide an alternative to WHILE using basic control flow. + ELSE/EL
 END: Finish the code
 ............................
 
-UPDATE: better error handling
+UPDATE:Better error handling + type additions print and eof
