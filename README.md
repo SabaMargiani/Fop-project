@@ -43,6 +43,7 @@ ENDWHILE: End the loop.
 IF and GOTO: Provide an alternative to WHILE using basic control flow. + ELSE/ELSEIF for support
 
 END: Finish the code
+
 ............................
 
 UPDATE:Better error handling + type additions print and eof
