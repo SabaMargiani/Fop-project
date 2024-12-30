@@ -12,10 +12,10 @@ public class Main {
         String file_contents = readFile(file_path);
 
         if (file_contents == null) {
-            System.out.println("problem in [" + Util.currentLocation() + "]: readFile on specified path returned null");
+            Util.printError("readFile on specified path returned null");
             scanner.close();
             return;
-        } 
+        }
         // convert into lowercase since BASIC is case-insensitive
         file_contents = file_contents.toLowerCase();
 
@@ -29,7 +29,7 @@ public class Main {
         scanner.close();
 
         // ==== ==== ==== TESTING ==== ==== ====
-        if (lexer.error_while_tokenizing) System.out.println("error_while_tokenizing true"); 
+        if (lexer.error_while_tokenizing) System.out.println("error_while_tokenizing true");
         printTokenList(tokenized);
 
     }
@@ -43,7 +43,7 @@ public class Main {
             }
             return content.toString();
         } catch (IOException e) {
-            System.err.println("problem in [" + Util.currentLocation() + "]: " + e.getMessage());
+            Util.printError(e.getMessage());
             return null;
         }
     }

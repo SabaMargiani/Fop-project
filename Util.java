@@ -9,9 +9,11 @@ public class Util {
         String methodName = element.getMethodName();
         int lineNumber = element.getLineNumber();
 
-        String currentLocation = "Current location: " + fileName + " -> " + methodName + " (Line " + lineNumber + ")";
+        String currentLocation = fileName + " -> " + methodName + " (Line " + lineNumber + ")";
         return currentLocation;
     }
 
-    
+    public static void printError(String message) {
+        System.out.println("Problem in [" + Util.currentLocation() + "]: " + message);
+    }
 }
