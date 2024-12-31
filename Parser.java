@@ -14,16 +14,11 @@ public class Parser {
         while (tokens.get(pos).type != TokenType.EOF) {
             Statement s = statement();
             if (s == null) {
-                Util.printError("statement() returned null -> syntax error");
+                Util.printError(Util.currentLocation(), "statement() returned null -> syntax error");
                 error_while_parsing = true;
                 break;
             }
-            
             statements.add(s);
-            if (error_while_parsing) {
-                Util.printError("syntax error if / for / while loop body. returning partial body");
-                break;
-            }
             ++pos;
         }
         return statements;
@@ -38,8 +33,11 @@ public class Parser {
             case WHILE:  return whileStatement();
             case IF:     return    ifStatement();
             case PRINT:  return printStatement();
+            case EOF:
+                Util.printError(Util.currentLocation(), "EOF where statement is expected");
+                return null;
             default: 
-                Util.printError("token " + posToken.type + " at line " + posToken.line + " doesn't match any statement syntax");
+                Util.printError(Util.currentLocation(), "token " + posToken.type + " at line " + posToken.line + " doesn't match any statement syntax");
                 return null;
         }
     }
@@ -47,22 +45,22 @@ public class Parser {
     private Statement letStatement() {
         // SYNTAX: LET [variableName] = [value]
         if (tokens.get(pos).type != TokenType.LET) {
-            Util.printError("let statement doesn't start with LET keyword");
+            Util.printError(Util.currentLocation(), "let statement doesn't start with LET keyword");
             return null;
         }
         Token left = tokens.get(++pos);
         if (left.type != TokenType.IDENTIFIER) {
-            Util.printError("left-side of let statement isn't a variable");
+            Util.printError(Util.currentLocation(), "left-side of let statement isn't a variable");
             return null;
         }
         if (tokens.get(++pos).type != TokenType.EQUAL) {
-            Util.printError("asignment of let statement not in place");
+            Util.printError(Util.currentLocation(), "asignment of let statement not in place");
             return null;
         }
         ++pos;
         Expression right = expression();
         if (right == null) {
-            Util.printError("right side of let statement can't be fit to an expression");
+            Util.printError(Util.currentLocation(), "right side of let statement can't be fit to an expression");
             return null;
         }
         return new LetStatement(left, right);
@@ -71,41 +69,42 @@ public class Parser {
     private Statement forStatement() {
 
         if (tokens.get(pos).type != TokenType.FOR) {
-            Util.printError("line " + tokens.get(pos).line + " - for statement doesn't start with FOR keyword.");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - for statement doesn't start with FOR keyword.");
             return null;
         }
+
         if (tokens.get(++pos).type != TokenType.LET) {
-            Util.printError("line " + tokens.get(pos).line + " - invalid loop variable declaration");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - invalid loop variable declaration");
             return null;
         }
 
         Token iStart = tokens.get(++pos);
         if (iStart.type != TokenType.IDENTIFIER) {
-            Util.printError("line " + tokens.get(pos).line + " - invalid loop variable declaration");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - invalid loop variable declaration");
             return null;
         }
 
         if (tokens.get(++pos).type != TokenType.EQUAL) {
-            Util.printError("line " + tokens.get(pos).line + " - invalid loop variable declaration");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - invalid loop variable declaration");
             return null;
         }
 
         ++pos;
         Expression startValue = expression();
         if (startValue == null) {
-            Util.printError("line " + tokens.get(pos).line + " - can't evaluate startValue for loop variable");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - can't evaluate startValue for loop variable");
             return null;
         }
 
         if (tokens.get(++pos).type != TokenType.TO) {
-            Util.printError("line " + tokens.get(pos).line + " - missing TO keyword after loop variable declaration");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - missing TO keyword after loop variable declaration");
             return null;
         }
 
         ++pos;
         Expression endValue = expression();
         if (endValue == null) {
-            Util.printError("line " + tokens.get(pos).line + " - can't evaluate endValue for loop variable");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - can't evaluate endValue for loop variable");
             return null;
         }
 
@@ -115,26 +114,20 @@ public class Parser {
         // statement -> expression -> ... -> primary errors
         while (tokens.get(pos).type != TokenType.NEXT) {
             Statement s = statement();
-            // error message will be in statement itself
-            if (s == null) break;
+            if (s == null) return null;
             body.add(s);
             ++pos;
         }
-
-        // logically, this can only execute if while is exited with a break
-        if (tokens.get(pos).type != TokenType.NEXT) {
-            Util.printError("line " + tokens.get(pos).line + " - incorrect syntax in for loop body");
-            error_while_parsing = true;
-            return new ForStatement(iStart, startValue, endValue, body);
-        }
         
+        // only reachable if syntax was valid untill NEXT
         Token iEnd = tokens.get(++pos);
         if (iEnd.type != TokenType.IDENTIFIER) {
-            Util.printError("");
+            Util.printError(Util.currentLocation(), "line " + iEnd.line + " expected: loop variable. got: token of type " + iEnd.type);
             return null;
         }
+
         if (!iEnd.string.equals(iStart.string)) {
-            Util.printError("line " + tokens.get(pos).line + " loop variable inconsistent");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " expected: loop variable [" + iStart.string + "]. got: variable [" + iEnd.string +"]");
             return null;
         }
 
@@ -143,85 +136,133 @@ public class Parser {
 
     private Statement whileStatement() {
         if (tokens.get(pos).type != TokenType.WHILE) {
-            Util.printError("line " + tokens.get(pos).line + " - while statement doesn't start with WHILE keyword");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - while statement doesn't start with WHILE keyword");
             return null;
         }
 
+        ++pos;
         Expression condition = expression();
         if (condition == null) {
-            Util.printError("line " + tokens.get(pos).line + " - coudln't evaluate while loop condition");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - coudln't evaluate while loop condition");
             return null;
         }
 
+        ++pos;
         List<Statement> body = new ArrayList<>();
         while (tokens.get(pos).type != TokenType.WEND) {
-            
             Statement s = statement();
-            if (s == null) break;
+            if (s == null) return null;
             body.add(s);
-            // TODO: remove this here and in other code if parser starts skipping tokens
             ++pos;
         }
         
-        // logically, this can only execute if while is exited with a break
-        if (tokens.get(pos).type != TokenType.WEND) {
-            Util.printError("line " + tokens.get(pos).line + " - incorrect syntax in while loop body");
-            error_while_parsing = true;
-        }
         return new WhileStatement(condition, body);
     }
 
     private Statement ifStatement() {
         if (tokens.get(pos).type != TokenType.IF) {
-            Util.printError("line " + tokens.get(pos).line + " - if statement doesn't start with IF keyword");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - if statement doesn't start with IF keyword");
             return null;
         }
-
+    
         ++pos;
         Expression condition = expression();
         if (condition == null) {
-            Util.printError("line " + tokens.get(pos).line + " - coudln't evaluate if statement condition");
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - couldn't evaluate if statement condition");
             return null;
         }
-
+    
         ++pos;
-        if (tokens.get(pos).type == null) {
-            Util.printError("line " + tokens.get(pos).line + " - THEN keyword missing after IF [condition]");
+        if (tokens.get(pos).type != TokenType.THEN) {
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - THEN keyword missing after IF [condition]");
             return null;
         }
-
+    
         List<Statement> thenBranch = new ArrayList<>();
-        while (tokens.get(pos).type != TokenType.ELSE && tokens.get(pos).type != TokenType.END) {
+        while (tokens.get(++pos).type != TokenType.ELSE && tokens.get(pos).type != TokenType.END) {
             Statement s = statement();
-            if (s == null) break;
-            // bliad ar gamodis ese
+            if (s == null) return null;
             thenBranch.add(s);
         }
-
-
-
+    
         List<Statement> elseBranch = null;
-        if (tokens.get(pos).type == TokenType.ELSE) {
-            consume(TokenType.ELSE);
+        while (tokens.get(pos).type == TokenType.ELSE) {
+    
+            if (tokens.get(++pos).type == TokenType.IF) {
+
+                ++pos;
+                Expression elseifCondition = expression();
+                if (elseifCondition == null) {
+                    Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - couldn't evaluate ELSE IF condition");
+                    return null;
+                }
+    
+                ++pos;
+                if (tokens.get(pos).type != TokenType.THEN) {
+                    Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - THEN keyword missing after ELSE IF [condition]");
+                    return null;
+                }
+    
+                List<Statement> elseifThenBranch = new ArrayList<>();
+                while (tokens.get(++pos).type != TokenType.ELSE && tokens.get(pos).type != TokenType.END) {
+                    Statement s = statement();
+                    if (s == null) return null;
+                    elseifThenBranch.add(s);
+                }
+    
+                IfStatement elseifStatement = new IfStatement(elseifCondition, elseifThenBranch, null);
+                if (elseBranch == null) elseBranch = new ArrayList<>();
+                elseBranch.add(elseifStatement);
+                continue;
+            }
+
             elseBranch = new ArrayList<>();
-            while (pos < tokens.size() && tokens.get(pos).type != TokenType.END) {
-                elseBranch.add(statement());
+            while (tokens.get(pos).type != TokenType.END) {
+                Statement s = statement();
+                if (s == null) return null;
+                elseBranch.add(s);
+                ++pos;
+                
             }
         }
-        consume(TokenType.END);
-        consume(TokenType.IF);
+    
+        if (tokens.get(pos).type != TokenType.END) {
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - expected: END keyword for if statement.  got: " + tokens.get(pos).type);
+            return null;
+        }
+    
+        if (tokens.get(++pos).type != TokenType.IF) {
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - expected: IF keyword for END-IF pair.  got: " + tokens.get(pos).type);
+            return null;
+        }
+    
         return new IfStatement(condition, thenBranch, elseBranch);
     }
+    
+    
 
     private Statement printStatement() {
-        consume(TokenType.PRINT);
-        List<Expression> expressions = new ArrayList<>();
-        expressions.add(expression());
-        while (tokens.get(pos).type == TokenType.SEMICOLON) {
-            consume(TokenType.SEMICOLON);
-            expressions.add(expression());
+        if (tokens.get(pos).type != TokenType.PRINT) {
+            Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - print statement doesn't start with PRINT keyword");
+            return null;
         }
-        return new PrintStatement(expressions);
+
+        List<Expression> expressions = new ArrayList<>();
+
+        while (true) {
+            ++pos;
+            Expression output = expression();
+            if (output == null) {
+                Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - couldn't evaluate expression to print");
+                return null;
+            }
+            expressions.add(output);
+
+            Token posToken = tokens.get(++pos);
+            if (posToken.type == TokenType.SEMICOLON) continue;
+            --pos;
+            return new PrintStatement(expressions);
+        }
     }
 
 
@@ -232,17 +273,19 @@ public class Parser {
     private Expression booleanExpression() {
         Expression expr = comparison();
         if (expr == null) return null;
-        
-        Token operator = tokens.get(pos);
-        while (operator.type == TokenType.EQUAL 
-            || operator.type == TokenType.NEQT
-            || operator.type == TokenType.AND
-            || operator.type == TokenType.OR) {
+
+        if (pos == tokens.size() - 2) return expr;
+        while (tokens.get(++pos).type == TokenType.EQUAL 
+            || tokens.get(pos).type == TokenType.NEQT
+            || tokens.get(pos).type == TokenType.AND
+            || tokens.get(pos).type == TokenType.OR) {
+            Token operator = tokens.get(pos);
             ++pos;
             Expression right = comparison();
             if (right == null) return null;
             expr = new BinaryExpression(expr, operator, right);
         }
+        --pos;
         return expr;
     }
 
@@ -250,16 +293,19 @@ public class Parser {
         Expression expr = addition();
         if (expr == null) return null;
 
-        Token operator = tokens.get(pos);
-        while (operator.type == TokenType.LESS
-            || operator.type == TokenType.GREATER 
-            || operator.type == TokenType.LEQT
-            || operator.type == TokenType.GEQT) {
+        if (pos == tokens.size() - 2) return expr;
+
+        while (tokens.get(++pos).type == TokenType.LESS
+            || tokens.get(pos).type == TokenType.GREATER 
+            || tokens.get(pos).type == TokenType.LEQT
+            || tokens.get(pos).type == TokenType.GEQT) {
+            Token operator = tokens.get(pos);
             ++pos;
             Expression right = addition();
             if (right == null) return null;
             expr = new BinaryExpression(expr, operator, right);
         }
+        --pos;
         return expr;
     }
 
@@ -267,13 +313,16 @@ public class Parser {
         Expression expr = multiplication();
         if (expr == null) return null;
 
-        Token operator = tokens.get(pos);
-        while (operator.type == TokenType.PLUS || operator.type == TokenType.MINUS) {
+        if (pos == tokens.size() - 2) return expr;
+        
+        while (tokens.get(++pos).type == TokenType.PLUS || tokens.get(pos).type == TokenType.MINUS) {
+            Token operator = tokens.get(pos);
             ++pos;
             Expression right = multiplication();
             if (right == null) return null;
             expr = new BinaryExpression(expr, operator, right);
         }
+        --pos;
         return expr;
     }
 
@@ -281,18 +330,22 @@ public class Parser {
         Expression expr = unary();
         if (expr == null) return null;
 
-        Token operator = tokens.get(pos);
-        while (operator.type == TokenType.PIPQI || operator.type == TokenType.SLASH || operator.type == TokenType.MOD) {         
+        if (pos == tokens.size() - 2) return expr;
+        
+        while (tokens.get(++pos).type == TokenType.PIPQI || tokens.get(pos).type == TokenType.SLASH || tokens.get(pos).type == TokenType.MOD) {   
+            Token operator = tokens.get(pos);
+            ++pos; 
             Expression right = unary();
             if (right == null) return null;
             expr = new BinaryExpression(expr, operator, right);
         }
+        --pos;
         return expr;
     }
 
     private Expression unary() {
         Token operator = tokens.get(pos);
-        if (operator.type == TokenType.NOT) {
+        if (operator.type == TokenType.NOT || operator.type == TokenType.SQR) {
             ++pos;
             Expression right = unary();
             if (right == null) return null;
@@ -305,52 +358,54 @@ public class Parser {
         Token posToken = tokens.get(pos);
 
         if (posToken.type == TokenType.EOF) {
-            Util.printError("reached EOF -> possible unfinished expression");
+            Util.printError(Util.currentLocation(), "reached EOF -> possible unfinished expression");
         }
 
         if (posToken.type == TokenType.NUMBER
          || posToken.type == TokenType.STRING
          || posToken.type == TokenType.TRUE 
          || posToken.type == TokenType.FALSE) {
-            return new LiteralExpression(tokens.get(pos++));
-        }
+            return new LiteralExpression(posToken);
+        } // prolly this right?
         if (posToken.type == TokenType.IDENTIFIER) {
-            return new VariableExpression(tokens.get(pos++));
+            return new VariableExpression(posToken);
         }
         if (posToken.type == TokenType.LPARENT) {
             ++pos;
             Expression expr = expression();
-            if (tokens.get(pos).type != TokenType.RPARENT) {
-                Util.printError("unclosed parentheses");
+            if (expr == null) {
+                Util.printError(Util.currentLocation(), "line " + posToken.line + " - can't evaluate expression inside parentheses");
+                return null;
+            }
+
+            if (tokens.get(++pos).type != TokenType.RPARENT) {
+                Util.printError(Util.currentLocation(), "unclosed parentheses");
+                return null;
             }
             return expr;
         }
-        Util.printError("unexpected token");
+        Util.printError(Util.currentLocation(), "unexpected token");
         return null;
     }
 
+// ===============================================================
 
-    private Token consume(TokenType type) {
-        if (tokens.get(pos).type == type) return advance();
-        throw new RuntimeException("Expected token: " + type + ", but found: " + tokens.get(pos).type);
-    }
+static abstract class Statement {}
 
-    private Token advance() {
-        if (tokens.get(pos).type != TokenType.EOF) pos++;
-        return tokens.get(pos - 1);
-    }
-}
-
-
-// =====================
-
-abstract class Statement {}
-
-class Program {
+static class Program {
     final List<Statement> statements;
 
     Program(List<Statement> statements) {
         this.statements = statements;
+    }
+
+    @Override
+    public String toString() {
+        String res = "";
+        for (Statement s: statements) {
+            res += s.toString() + "\n";
+        }
+        return res;
     }
 }
 
@@ -361,6 +416,11 @@ class LetStatement extends Statement {
     LetStatement(Token identifier, Expression value) {
         this.identifier = identifier;
         this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return "let: variable " + identifier.string + ", right-side " + value.toString();
     }
 }
 
@@ -376,6 +436,15 @@ class ForStatement extends Statement {
         this.end = end;
         this.body = body;
     }
+
+    @Override
+    public String toString() {
+        String res = "for loop: " + variable.string + " = " + start.toString() + "; " + variable.string + "++; " + variable.string + " < " + end.toString();
+        for (Statement s: body) {
+            res += "\n\t" + s.toString();
+        }
+        return res;
+    }
 }
 
 class WhileStatement extends Statement {
@@ -385,6 +454,15 @@ class WhileStatement extends Statement {
     WhileStatement(Expression condition, List<Statement> body) {
         this.condition = condition;
         this.body = body;
+    }
+
+    @Override
+    public String toString() {
+        String res = "while: " + condition.toString();
+        for (Statement s: body) {
+            res += "\n\t" + s.toString();
+        }
+        return res;
     }
 }
 
@@ -398,6 +476,20 @@ class IfStatement extends Statement {
         this.thenBranch = thenBranch;
         this.elseBranch = elseBranch;
     }
+
+    @Override
+    public String toString() {
+        String res = "if (" + condition.toString() + "):";
+        for (Statement s: thenBranch) {
+            res += "\n\t" + s.toString();
+        }
+        res += "\nelse:";
+        if (elseBranch == null) return res;
+        for (Statement s: elseBranch) {
+            res += "\n\t" + s.toString();
+        }
+        return res;
+    }
 }
 
 class PrintStatement extends Statement {
@@ -405,6 +497,15 @@ class PrintStatement extends Statement {
 
     PrintStatement(List<Expression> expressions) {
         this.expressions = expressions;
+    }
+
+    @Override
+    public String toString() {
+        String res = "print ";
+        for (Expression e: expressions) {
+            res += e.toString() + " ";
+        }
+        return res;
     }
 }
 
@@ -420,6 +521,11 @@ class BinaryExpression extends Expression {
         this.operator = operator;
         this.right = right;
     }
+
+    @Override
+    public String toString() {
+        return left.toString() + " " + operator.type.toString() + " " + right.toString();
+    }
 }
 
 class UnaryExpression extends Expression {
@@ -430,6 +536,10 @@ class UnaryExpression extends Expression {
         this.operator = operator;
         this.right = right;
     }
+    @Override
+    public String toString() {
+        return "not-" + right.toString();
+    }
 }
 
 class LiteralExpression extends Expression {
@@ -437,6 +547,11 @@ class LiteralExpression extends Expression {
 
     LiteralExpression(Token literal) {
         this.literal = literal;
+    }
+    
+    @Override
+    public String toString() {
+        return literal.string;
     }
 }
 
@@ -446,4 +561,10 @@ class VariableExpression extends Expression {
     VariableExpression(Token identifier) {
         this.identifier = identifier;
     }
+
+    @Override
+    public String toString() {
+        return identifier.string;
+    }
+}
 }
