@@ -12,25 +12,34 @@ public class Main {
         String file_contents = readFile(file_path);
 
         if (file_contents == null) {
-            Util.printError("readFile on specified path returned null");
+            Util.printError(Util.currentLocation(), "readFile on specified path returned null");
             scanner.close();
             return;
-        }
+        } 
         // convert into lowercase since BASIC is case-insensitive
         file_contents = file_contents.toLowerCase();
 
         // turn string into tokens via lexer
         Lexer lexer = new Lexer(file_contents);
         List<Token> tokenized = lexer.tokenize();
-        // build a syntax tree from tokens via parser
 
+        // if (lexer.error_while_tokenizing) {
+        //     System.out.println("error_while_tokenizing true"); 
+        //     scanner.close();
+        //     return;
+        // }
+        // printTokenList(tokenized);
+        // System.out.println("");
+        // build a syntax tree from tokens via parser
+        Parser parser = new Parser(tokenized);
+        Parser.Program parsed = new Parser.Program(parser.parse());
         // execute the syntax tree via interpreter
 
         scanner.close();
 
         // ==== ==== ==== TESTING ==== ==== ====
-        if (lexer.error_while_tokenizing) System.out.println("error_while_tokenizing true");
-        printTokenList(tokenized);
+
+        System.out.println(parsed.toString());
 
     }
 
@@ -43,7 +52,7 @@ public class Main {
             }
             return content.toString();
         } catch (IOException e) {
-            Util.printError(e.getMessage());
+            Util.printError(Util.currentLocation(), e.getMessage());
             return null;
         }
     }
@@ -61,7 +70,7 @@ public class Main {
                 System.out.println();
                 ++line;
             }
-            System.out.print(li.get(i).toString() + "  ");
+            System.out.print(li.get(i).type.toString() + "  ");
         }
         return res;
     }
