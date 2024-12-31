@@ -34,7 +34,7 @@ public class Lexer {
 
     String input;
     int pos = 0;
-    int line = 0;
+    int line = 1;
     boolean error_while_tokenizing = false;
 
     public Lexer(String input) {
@@ -43,27 +43,27 @@ public class Lexer {
 
     public List<Token> tokenize() {
         // quick fix function
-        List<Token> li = tokenize();
+        List<Token> li = realTokenize();
         if (li == null) return null;
         li.add(new Token(TokenType.EOF, line));
         return li;
     }
     public List<Token> realTokenize() {
         if (input == null) {
-            Util.printError("input string is null");
+            Util.printError(Util.currentLocation(), "input string is null");
             error_while_tokenizing = true;
             return null;
         }
 
         List<Token> tokenList = new ArrayList<>();
-
+    
         while(true) {
             char poschar = input.charAt(pos);
             switch (poschar) {
                 case '\0': return tokenList;
-                case '\n':
-                    ++pos;
-                    ++line;
+                case '\n': 
+                    ++pos;  
+                    ++line; 
                     continue;
                 case '\t':
                 case ' ' :
@@ -72,7 +72,7 @@ public class Lexer {
             }
 
             if (isLetter(poschar)) {
-                String word = "" + poschar;
+                String word = "" + poschar;               
                 while(true) {
                     poschar = input.charAt(++pos);
                     if (!isAlphaNumeric(poschar)) break;
@@ -83,9 +83,9 @@ public class Lexer {
                 tokenList.add(new Token(t, word, line));
                 continue;
             }
-
+            
             if (isDigit(poschar)) {
-                String numString = "" + poschar;
+                String numString = "" + poschar;               
                 while(true) {
                     poschar = input.charAt(++pos);
                     if (!isDigit(poschar)) break;
@@ -94,7 +94,7 @@ public class Lexer {
                 tokenList.add(new Token(TokenType.NUMBER, numString, line));
                 continue;
             }
-
+            
             if (poschar == '\'' ) {
                 while (true) {
                     poschar = input.charAt(++pos);
@@ -102,7 +102,7 @@ public class Lexer {
                 }
                 continue;
             }
-
+            
             if (poschar == '\"') {
                 int openLine = line;
                 String strString = "";
@@ -115,14 +115,14 @@ public class Lexer {
                     }
                     if (poschar == '\0') {
                         error_while_tokenizing = true;
-                        Util.printError("\" at line " + openLine + " is unclosed");
+                        Util.printError(Util.currentLocation(), "\" at line " + openLine + " is unclosed");
                         break;
                     }
                     strString += poschar;
                 }
                 continue;
             }
-
+            
             if (poschar == '<') {
                 poschar = input.charAt(++pos);
                 if (poschar == '>') {
@@ -138,7 +138,7 @@ public class Lexer {
                 tokenList.add(new Token(TokenType.LESS, line));
                 continue;
             }
-
+            
             if (poschar == '>') {
                 if (input.charAt(++pos) == '=') {
                     tokenList.add(new Token(TokenType.GEQT, line));
@@ -146,29 +146,31 @@ public class Lexer {
                 } else tokenList.add(new Token(TokenType.GREATER, line));
                 continue;
             }
-
+            
             switch (poschar) {
-                case '+': tokenList.add(new Token(TokenType.PLUS,      line)); break;
-                case '-': tokenList.add(new Token(TokenType.MINUS,     line)); break;
-                case '*': tokenList.add(new Token(TokenType.PIPQI,     line)); break;
-                case'\\': tokenList.add(new Token(TokenType.SLASH,     line)); break;
-                case '(': tokenList.add(new Token(TokenType.LPARENT,   line)); break;
-                case ')': tokenList.add(new Token(TokenType.RPARENT,   line)); break;
-                case '=': tokenList.add(new Token(TokenType.EQUAL,     line)); break;
-                case ';': tokenList.add(new Token(TokenType.SEMICOLON, line)); break;
-                default:
-                    Util.printError("unmatched symbol at line " + line);
-                    return tokenList;
+            case '+': tokenList.add(new Token(TokenType.PLUS,      line)); break;
+            case '-': tokenList.add(new Token(TokenType.MINUS,     line)); break;
+            case '*': tokenList.add(new Token(TokenType.PIPQI,     line)); break;
+            case'\\': tokenList.add(new Token(TokenType.SLASH,     line)); break;
+            case '(': tokenList.add(new Token(TokenType.LPARENT,   line)); break;
+            case ')': tokenList.add(new Token(TokenType.RPARENT,   line)); break;
+            case '=': tokenList.add(new Token(TokenType.EQUAL,     line)); break;
+            case ';': tokenList.add(new Token(TokenType.SEMICOLON, line)); break;
+            default:
+            Util.printError(Util.currentLocation(), "unmatched symbol at line " + line);
+                return tokenList;
             }
             ++pos;
 
         }
     }
-
+            
 
     public static boolean isLetter(char c) {return ('a' <= c && c <= 'z');}
     public static boolean isDigit (char c) {return ('0' <= c && c <= '9');}
     public static boolean isAlphaNumeric(char c) {return ('a' <= c && c <= 'z') || ('0' <= c && c <= '9') || c == '_';}
-
+    
 
 }
+
+
