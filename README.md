@@ -29,11 +29,23 @@ PRINT: Output the value of a variable or expression.
 
 WHILE: Start a loop that continues until a condition is no longer true.
 
+THEN: Indicates the body of a conditional statement.
+
+FOR: Starts a for loop.
+
 ENDWHILE: End the loop.
 
 IF and GOTO: Provide an alternative to WHILE using basic control flow. + ELSE/ELSEIF for support
 
+TO: Specifies the end value for a for loop iteration.
+
+Exit: Exits the nearest loop.
+
+NEXT: Marks the end of a for loop body.
+
 END: Finish the code
+
+WEND: Marks the end of a while loop body.
 
 ............................
 
