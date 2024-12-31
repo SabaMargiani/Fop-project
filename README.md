@@ -16,16 +16,7 @@ cd basic-interpreter
 
   Compile the code:
   
-If using the command line, run the following command to compile all .java files:
-javac *.java
-
-  Run the project:
-  
-You can run the interpreter using the following command:
-java BasicInterpreter
-
-  Enter BASIC code:
-After running the program, you will be prompted to enter BASIC code. Type your BASIC program, and type END to terminate the input.
+To compile this code you need to run the text file given in the files (./algorithms.bas)
 
 
   Features
