@@ -4,7 +4,7 @@ import java.util.List;
 public class Parser {
     List<Token> tokens;
     int pos = 0;
-    boolean error_while_parsing = false;  
+    boolean error_while_parsing = false;
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
     }
@@ -36,7 +36,7 @@ public class Parser {
             case EOF:
                 Util.printError(Util.currentLocation(), "EOF where statement is expected");
                 return null;
-            default: 
+            default:
                 Util.printError(Util.currentLocation(), "token " + posToken.type + " at line " + posToken.line + " doesn't match any statement syntax");
                 return null;
         }
@@ -118,7 +118,7 @@ public class Parser {
             body.add(s);
             ++pos;
         }
-        
+
         // only reachable if syntax was valid untill NEXT
         Token iEnd = tokens.get(++pos);
         if (iEnd.type != TokenType.IDENTIFIER) {
@@ -155,7 +155,7 @@ public class Parser {
             body.add(s);
             ++pos;
         }
-        
+
         return new WhileStatement(condition, body);
     }
 
@@ -164,30 +164,30 @@ public class Parser {
             Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - if statement doesn't start with IF keyword");
             return null;
         }
-    
+
         ++pos;
         Expression condition = expression();
         if (condition == null) {
             Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - couldn't evaluate if statement condition");
             return null;
         }
-    
+
         ++pos;
         if (tokens.get(pos).type != TokenType.THEN) {
             Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - THEN keyword missing after IF [condition]");
             return null;
         }
-    
+
         List<Statement> thenBranch = new ArrayList<>();
         while (tokens.get(++pos).type != TokenType.ELSE && tokens.get(pos).type != TokenType.END) {
             Statement s = statement();
             if (s == null) return null;
             thenBranch.add(s);
         }
-    
+
         List<Statement> elseBranch = null;
         while (tokens.get(pos).type == TokenType.ELSE) {
-    
+
             if (tokens.get(++pos).type == TokenType.IF) {
 
                 ++pos;
@@ -196,20 +196,20 @@ public class Parser {
                     Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - couldn't evaluate ELSE IF condition");
                     return null;
                 }
-    
+
                 ++pos;
                 if (tokens.get(pos).type != TokenType.THEN) {
                     Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - THEN keyword missing after ELSE IF [condition]");
                     return null;
                 }
-    
+
                 List<Statement> elseifThenBranch = new ArrayList<>();
                 while (tokens.get(++pos).type != TokenType.ELSE && tokens.get(pos).type != TokenType.END) {
                     Statement s = statement();
                     if (s == null) return null;
                     elseifThenBranch.add(s);
                 }
-    
+
                 IfStatement elseifStatement = new IfStatement(elseifCondition, elseifThenBranch, null);
                 if (elseBranch == null) elseBranch = new ArrayList<>();
                 elseBranch.add(elseifStatement);
@@ -222,24 +222,24 @@ public class Parser {
                 if (s == null) return null;
                 elseBranch.add(s);
                 ++pos;
-                
+
             }
         }
-    
+
         if (tokens.get(pos).type != TokenType.END) {
             Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - expected: END keyword for if statement.  got: " + tokens.get(pos).type);
             return null;
         }
-    
+
         if (tokens.get(++pos).type != TokenType.IF) {
             Util.printError(Util.currentLocation(), "line " + tokens.get(pos).line + " - expected: IF keyword for END-IF pair.  got: " + tokens.get(pos).type);
             return null;
         }
-    
+
         return new IfStatement(condition, thenBranch, elseBranch);
     }
-    
-    
+
+
 
     private Statement printStatement() {
         if (tokens.get(pos).type != TokenType.PRINT) {
@@ -275,10 +275,10 @@ public class Parser {
         if (expr == null) return null;
 
         if (pos == tokens.size() - 2) return expr;
-        while (tokens.get(++pos).type == TokenType.EQUAL 
-            || tokens.get(pos).type == TokenType.NEQT
-            || tokens.get(pos).type == TokenType.AND
-            || tokens.get(pos).type == TokenType.OR) {
+        while (tokens.get(++pos).type == TokenType.EQUAL
+                || tokens.get(pos).type == TokenType.NEQT
+                || tokens.get(pos).type == TokenType.AND
+                || tokens.get(pos).type == TokenType.OR) {
             Token operator = tokens.get(pos);
             ++pos;
             Expression right = comparison();
@@ -296,9 +296,9 @@ public class Parser {
         if (pos == tokens.size() - 2) return expr;
 
         while (tokens.get(++pos).type == TokenType.LESS
-            || tokens.get(pos).type == TokenType.GREATER 
-            || tokens.get(pos).type == TokenType.LEQT
-            || tokens.get(pos).type == TokenType.GEQT) {
+                || tokens.get(pos).type == TokenType.GREATER
+                || tokens.get(pos).type == TokenType.LEQT
+                || tokens.get(pos).type == TokenType.GEQT) {
             Token operator = tokens.get(pos);
             ++pos;
             Expression right = addition();
@@ -314,7 +314,7 @@ public class Parser {
         if (expr == null) return null;
 
         if (pos == tokens.size() - 2) return expr;
-        
+
         while (tokens.get(++pos).type == TokenType.PLUS || tokens.get(pos).type == TokenType.MINUS) {
             Token operator = tokens.get(pos);
             ++pos;
@@ -331,10 +331,10 @@ public class Parser {
         if (expr == null) return null;
 
         if (pos == tokens.size() - 2) return expr;
-        
-        while (tokens.get(++pos).type == TokenType.PIPQI || tokens.get(pos).type == TokenType.SLASH || tokens.get(pos).type == TokenType.MOD) {   
+
+        while (tokens.get(++pos).type == TokenType.PIPQI || tokens.get(pos).type == TokenType.SLASH || tokens.get(pos).type == TokenType.MOD) {
             Token operator = tokens.get(pos);
-            ++pos; 
+            ++pos;
             Expression right = unary();
             if (right == null) return null;
             expr = new BinaryExpression(expr, operator, right);
@@ -362,9 +362,9 @@ public class Parser {
         }
 
         if (posToken.type == TokenType.NUMBER
-         || posToken.type == TokenType.STRING
-         || posToken.type == TokenType.TRUE 
-         || posToken.type == TokenType.FALSE) {
+                || posToken.type == TokenType.STRING
+                || posToken.type == TokenType.TRUE
+                || posToken.type == TokenType.FALSE) {
             return new LiteralExpression(posToken);
         } // prolly this right?
         if (posToken.type == TokenType.IDENTIFIER) {
@@ -388,183 +388,5 @@ public class Parser {
         return null;
     }
 
-// ===============================================================
 
-static abstract class Statement {}
-
-static class Program {
-    final List<Statement> statements;
-
-    Program(List<Statement> statements) {
-        this.statements = statements;
-    }
-
-    @Override
-    public String toString() {
-        String res = "";
-        for (Statement s: statements) {
-            res += s.toString() + "\n";
-        }
-        return res;
-    }
-}
-
-class LetStatement extends Statement {
-    final Token identifier;
-    final Expression value;
-
-    LetStatement(Token identifier, Expression value) {
-        this.identifier = identifier;
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return "let: variable " + identifier.string + ", right-side " + value.toString();
-    }
-}
-
-class ForStatement extends Statement {
-    final Token variable;
-    final Expression start;
-    final Expression end;
-    final List<Statement> body;
-
-    ForStatement(Token variable, Expression start, Expression end, List<Statement> body) {
-        this.variable = variable;
-        this.start = start;
-        this.end = end;
-        this.body = body;
-    }
-
-    @Override
-    public String toString() {
-        String res = "for loop: " + variable.string + " = " + start.toString() + "; " + variable.string + "++; " + variable.string + " < " + end.toString();
-        for (Statement s: body) {
-            res += "\n\t" + s.toString();
-        }
-        return res;
-    }
-}
-
-class WhileStatement extends Statement {
-    final Expression condition;
-    final List<Statement> body;
-
-    WhileStatement(Expression condition, List<Statement> body) {
-        this.condition = condition;
-        this.body = body;
-    }
-
-    @Override
-    public String toString() {
-        String res = "while: " + condition.toString();
-        for (Statement s: body) {
-            res += "\n\t" + s.toString();
-        }
-        return res;
-    }
-}
-
-class IfStatement extends Statement {
-    final Expression condition;
-    final List<Statement> thenBranch;
-    final List<Statement> elseBranch;
-
-    IfStatement(Expression condition, List<Statement> thenBranch, List<Statement> elseBranch) {
-        this.condition = condition;
-        this.thenBranch = thenBranch;
-        this.elseBranch = elseBranch;
-    }
-
-    @Override
-    public String toString() {
-        String res = "if (" + condition.toString() + "):";
-        for (Statement s: thenBranch) {
-            res += "\n\t" + s.toString();
-        }
-        res += "\nelse:";
-        if (elseBranch == null) return res;
-        for (Statement s: elseBranch) {
-            res += "\n\t" + s.toString();
-        }
-        return res;
-    }
-}
-
-class PrintStatement extends Statement {
-    final List<Expression> expressions;
-
-    PrintStatement(List<Expression> expressions) {
-        this.expressions = expressions;
-    }
-
-    @Override
-    public String toString() {
-        String res = "print ";
-        for (Expression e: expressions) {
-            res += e.toString() + " ";
-        }
-        return res;
-    }
-}
-
-abstract class Expression {}
-
-class BinaryExpression extends Expression {
-    final Expression left;
-    final Token operator;
-    final Expression right;
-
-    BinaryExpression(Expression left, Token operator, Expression right) {
-        this.left = left;
-        this.operator = operator;
-        this.right = right;
-    }
-
-    @Override
-    public String toString() {
-        return left.toString() + " " + operator.type.toString() + " " + right.toString();
-    }
-}
-
-class UnaryExpression extends Expression {
-    final Token operator;
-    final Expression right;
-
-    UnaryExpression(Token operator, Expression right) {
-        this.operator = operator;
-        this.right = right;
-    }
-    @Override
-    public String toString() {
-        return "not-" + right.toString();
-    }
-}
-
-class LiteralExpression extends Expression {
-    final Token literal;
-
-    LiteralExpression(Token literal) {
-        this.literal = literal;
-    }
-    
-    @Override
-    public String toString() {
-        return literal.string;
-    }
-}
-
-class VariableExpression extends Expression {
-    final Token identifier;
-
-    VariableExpression(Token identifier) {
-        this.identifier = identifier;
-    }
-
-    @Override
-    public String toString() {
-        return identifier.string;
-    }
-}
 }
