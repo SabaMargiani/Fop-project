@@ -15,7 +15,7 @@ public class Main {
             Util.printError(Util.currentLocation(), "readFile on specified path returned null");
             scanner.close();
             return;
-        } 
+        }
         // convert into lowercase since BASIC is case-insensitive
         file_contents = file_contents.toLowerCase();
 
@@ -23,25 +23,33 @@ public class Main {
         Lexer lexer = new Lexer(file_contents);
         List<Token> tokenized = lexer.tokenize();
 
-        // if (lexer.error_while_tokenizing) {
-        //     System.out.println("error_while_tokenizing true"); 
-        //     scanner.close();
-        //     return;
-        // }
-        // printTokenList(tokenized);
-        // System.out.println("");
         // build a syntax tree from tokens via parser
         Parser parser = new Parser(tokenized);
-        Parser.Program parsed = new Parser.Program(parser.parse());
+        Program parsed = new Program(parser.parse());
+
         // execute the syntax tree via interpreter
+        Interpreter interpreter = new Interpreter();
+        interpreter.interpret(parsed.statements);
 
         scanner.close();
 
-        // ==== ==== ==== TESTING ==== ==== ====
+    }
 
-        System.out.println(parsed.toString());
+    // CAN USE sout(parsed.toString()) TO CHECK PARSER RESULT
+    // CAN USE THIS TO CHECK LEXER RESULT
+    @SuppressWarnings("unused")
+    private static void lexerCheck(Lexer lexer, Scanner scanner, List<Token> tokenized) {
+        if (lexer.error_while_tokenizing) {
+            System.out.println("error_while_tokenizing true");
+            scanner.close();
+            return;
+        }
+        printTokenList(tokenized);
+        System.out.println("");
 
     }
+
+
 
     public static String readFile(String file_path) {
         StringBuilder content = new StringBuilder();
@@ -74,4 +82,6 @@ public class Main {
         }
         return res;
     }
+
+
 }
