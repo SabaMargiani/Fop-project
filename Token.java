@@ -16,6 +16,8 @@ public class Token {
 
     @Override
     public String toString() {
-        return type.toString();
+        String extra = "";
+        if (type == TokenType.IDENTIFIER || type == TokenType.STRING || type == TokenType.NUMBER) extra += " value: " + string;
+        return "line " + line + ": " + type.toString() + extra;
     }
 }
