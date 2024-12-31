@@ -13,7 +13,7 @@ public class Util {
         return currentLocation;
     }
 
-    public static void printError(String message) {
-        System.out.println("Problem in [" + Util.currentLocation() + "]: " + message);
+    public static void printError(String location, String message) {
+        System.out.println("Problem in [" + location + "]: " + message);
     }
 }
